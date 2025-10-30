@@ -1,0 +1,8 @@
+:root { --brand-size: 52px; }
+.reveal .slides { font-size: 30px; }
+.reveal h1, .reveal h2, .reveal h3 { text-transform: none; }
+.logo { position: fixed; top: 16px; right: 20px; z-index: 10; }
+.logo img { height: var(--brand-size); opacity: 0.85; }
+@media print {
+  .logo { display: none; }
+}

@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+bin/
+include/
+lib/
+lib64/
+lib64
+share/
+pyvenv.cfg
+.venv/
+venv/
+env/
+
+# Caches
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets and env files
+*.pem
+*.key
+*.crt
+*.p12
+.env
+.env.*
+.envrc
+
+# Archives / backups
+*.zip
+*.tar
+*.tar.gz
+*.bak
+vrmeta_app_backup_*.zip
+
+# Node
+node_modules/

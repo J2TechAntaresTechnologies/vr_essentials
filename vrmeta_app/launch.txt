@@ -1,0 +1,7 @@
+cd ~/enviroments/vrmeta/vrmeta_app  # si no estás ya ahí
+uvicorn --app-dir src vrmeta_server.app:create_app \
+  --factory \
+  --host 0.0.0.0 \
+  --port 8443 \
+  --ssl-certfile cert.pem \
+  --ssl-keyfile key.pem

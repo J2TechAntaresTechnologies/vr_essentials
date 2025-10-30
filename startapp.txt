@@ -1,0 +1,47 @@
+START RÁPIDO — VRMeta Server (Python + WebXR)
+
+Prerrequisitos
+- Ubuntu 22.04 con Python 3.10 o superior.
+- Un visor con navegador WebXR (Meta Quest, Pico, Wolvic) en la misma red Wi‑Fi.
+- (Opcional) Certificados TLS válidos si vas a usar HTTPS.
+
+1) Instalar dependencias
+cd vrmeta_app
+pip install -e .
+
+2) Ejecutar en desarrollo (HTTP)
+vrmeta-server --host 0.0.0.0 --port 8000 --reload
+
+3) Probar desde el PC
+http://localhost:8000/           (landing)
+http://localhost:8000/api/ping   (debería responder {"ok": true})
+
+4) Abrir desde el visor (misma Wi‑Fi)
+http://<IP-DE-TU-PC>:8000/web/index.html
+Sugerencia para obtener IP: ejecuta `hostname -I` y toma la IP de tu red LAN.
+
+5) Ejecutar con HTTPS (recomendado)
+Desde la carpeta vrmeta_app ejecuta:
+uvicorn --app-dir src vrmeta_server.app:create_app \
+  --factory --host 0.0.0.0 --port 8443 \
+  --ssl-certfile cert.pem --ssl-keyfile key.pem
+
+En el visor, abre:
+https://<IP-DE-TU-PC>:8443/web/index.html
+
+Notas sobre certificados
+- Si el certificado no es de confianza, algunos navegadores no habilitan WebXR en modo inmersivo.
+- Opciones: generar certificados con mkcert e instalar la CA en el visor, o poner un proxy (Caddy/Traefik/NGINX) con TLS válido delante de Uvicorn.
+
+Archivos clave
+- Backend: vrmeta_app/src/vrmeta_server/app.py, routes.py, main.py
+- Cliente WebXR: vrmeta_app/src/vrmeta_server/web/index.html
+
+Detener el servidor
+- Ctrl + C en la terminal.
+
+Problemas comunes
+- No aparece “Enter VR”: usa HTTPS con certificado confiable y un navegador con soporte WebXR.
+- No conecta WebSocket: revisa puertos/firewall y que uses ws:// (HTTP) o wss:// (HTTPS).
+- Rendimiento bajo/pantalla negra: simplifica la escena, limita drawcalls/texturas y usa Wi‑Fi 5/6 estable.
+

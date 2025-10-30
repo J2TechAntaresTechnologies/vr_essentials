@@ -1,0 +1,143 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VRMeta WebXR Test</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #101014;
+        color: #eee;
+        font-family: system-ui, sans-serif;
+      }
+      #overlay {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(0, 0, 0, 0.55);
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        line-height: 1.4;
+        z-index: 10;
+        max-width: 320px;
+      }
+      a {
+        color: #70c0ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="overlay">
+      WebXR demo — abre <b>/web/index.html</b> y pulsa “Enter VR”.<br />
+      Verás un cubo turquesa rotando sobre una cuadrícula.
+    </div>
+    <script type="module">
+      import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+      import { VRButton } from 'https://unpkg.com/three@0.160.0/examples/jsm/webxr/VRButton.js';
+
+      const overlay = document.getElementById('overlay');
+      function setOverlayMessage(msg) {
+        overlay.innerHTML = msg;
+      }
+
+      // Validaciones de entorno para WebXR
+      const secureContext = window.isSecureContext || location.hostname === 'localhost';
+      if (!secureContext) {
+        setOverlayMessage(
+          'Contexto no seguro: el certificado TLS no es de confianza. WebXR bloquea el modo VR hasta que instales un certificado válido (por ejemplo, usando mkcert y añadiendo la CA al visor).'
+        );
+      } else if (!('xr' in navigator)) {
+        setOverlayMessage(
+          'WebXR no disponible o contexto no seguro. Usa Oculus/Meta Browser y HTTPS con certificado confiable.'
+        );
+      } else if (navigator.xr.isSessionSupported) {
+        navigator.xr
+          .isSessionSupported('immersive-vr')
+          .then((supported) => {
+            if (!supported) {
+              setOverlayMessage(
+                'El botón “Enter VR” no aparece porque este dispositivo/navegador no expone sesiones WebXR inmersivas.'
+              );
+            }
+          })
+          .catch(() => {
+            setOverlayMessage('No se pudo verificar el soporte WebXR. Revisa permisos y certificado TLS.');
+          });
+      }
+
+      // Escena básica
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x101014);
+
+      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+      camera.position.set(0, 0.6, 3);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.xr.enabled = true;
+      document.body.appendChild(renderer.domElement);
+      document.body.appendChild(VRButton.createButton(renderer));
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222233, 1.2);
+      scene.add(hemiLight);
+
+      const cubeGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+      const cubeMaterial = new THREE.MeshStandardMaterial({ color: 0x2ec4b6, roughness: 0.45, metalness: 0.15 });
+      const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+      
+      cube.position.set(0, 1.5, -1.6);
+      scene.add(cube);
+
+      // (Sin texto 3D) Demo mínima estable
+
+     
+
+      const grid = new THREE.GridHelper(10, 10, 0x4b5563, 0x1f2937);
+      scene.add(grid);
+
+      function renderFrame() {
+        cube.rotation.y += 0.01;
+        cube.rotation.x += 0.004;
+        renderer.render(scene, camera);
+      }
+
+      // WebSocket simple hacia el backend FastAPI
+      const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws';
+      const ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ type: 'hello', from: 'webxr' }));
+      };
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'broadcast') {
+            // Lugar reservado para sincronizar estado 3D si se requiere
+          }
+        } catch (err) {
+          console.warn('Mensaje WS no JSON', err);
+        }
+      };
+      ws.onclose = () => console.log('WebSocket cerrado');
+
+      renderer.setAnimationLoop((time, frame) => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'frame', t: time }));
+        }
+        renderFrame();
+      });
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    </script>
+  </body>
+</html>
